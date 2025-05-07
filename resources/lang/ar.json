@@ -1,0 +1,50 @@
+{
+    "navigation": {
+        "domains": "المجالات",
+        "assessments": "التقييمات"
+    },
+    "domain": {
+        "model": "مجال",
+        "plural": "مجالات",
+        "name": "الاسم",
+        "order": "الترتيب",
+        "items_count": "عدد العناصر"
+    },
+    "assessment": {
+        "model": "تقييم",
+        "plural": "التقييمات",
+        "actions": {
+            "back": "العودة للتقييمات",
+            "print": "طباعة التقرير",
+            "save": "حفظ التقييم"
+        },
+        "stats": {
+            "assessment_name": "اسم التقييم",
+            "assessment_date": "تاريخ التقييم",
+            "available_items": "العناصر المتوفرة",
+            "unavailable_items": "العناصر غير المتوفرة",
+            "completion": "اكتمال التقييم"
+        },
+        "form": {
+            "available": "متوفر",
+            "notes": "ملاحظات",
+            "select_domain": "تحديد المجال"
+        }
+    },
+    "widgets": {
+        "assessment_results": {
+            "order": "م",
+            "category": "العنصر الرئيسي",
+            "question": "السؤال التدقيقي",
+            "available": "متوفر",
+            "notes": "ملاحظات"
+        },
+        "domain_selector": {
+            "title": "تحديد المجال"
+        },
+        "assessment_stats": {
+            "completion_description": ":percentage% مكتمل",
+            "items_description": ":percentage% من العناصر المقيمة"
+        }
+    }
+}
