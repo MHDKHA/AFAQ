@@ -27,7 +27,7 @@ class ListAssessmentReports extends ListRecords
 class ViewAssessmentReport extends ViewRecord
 {
     protected static string $resource = AssessmentReportResource::class;
-2313121
+
     protected function getHeaderActions(): array
     {
         return [
