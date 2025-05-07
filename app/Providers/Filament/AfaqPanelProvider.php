@@ -28,7 +28,7 @@ class AfaqPanelProvider extends PanelProvider
             ->id('afaq')
             ->path('afaq')
             ->login()
-            ->register()
+            ->registration()
             ->colors([
                 'primary' => Color::Amber,
             ])
