@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\AssessmentResource\Widgets;
 
 use App\Models\AssesmentItem;
-use App\Models\Assesment;
+use App\Models\Assessment;
 use Filament\Tables;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 class AssesmentResults extends TableWidget
 {
     // Will be injected from the parent page’s getWidgetsData()
-    public ?Assesment $record = null;
+    public ?Assessment $record = null;
 
     // Will be injected and updated via the domain selector widget
     public ?int $selectedDomain = null;

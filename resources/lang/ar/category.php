@@ -1,21 +1,22 @@
 <?php
 
 return [
-    'navigation_label' => 'الأقسام',
-    'model' => 'قسم',
-    'plural' => 'الأقسام',
+    'navigation_label' => 'المجالات',
+    'model' => 'مجال',
+    'plural' => 'المجال',
     'form' => [
-        'domain' => 'المجال',
-        'name' => 'الاسم',
+        'domain' => 'فئة',
+        'name' => 'الاسم بالانجليزي',
+        'name_ar' => 'الاسم بالعربي',
         'order' => 'الترتيب',
     ],
     'table' => [
-        'domain' => 'المجال',
+        'domain' => 'فئة',
         'name' => 'الاسم',
         'order' => 'الترتيب',
-        'criteria_count' => 'عدد المعايير',
+        'criteria_count' => 'عدد المجالات',
     ],
     'filters' => [
-        'domain' => 'المجال',
+        'domain' => 'فئة',
     ],
 ];

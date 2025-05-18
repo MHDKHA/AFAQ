@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'navigation_label' => 'معايير التقييم',
-    'model' => 'معيار تقييم',
-    'plural' => 'معايير التقييم',
+    'navigation_label' => 'العناصر',
+    'model' => 'العنصر',
+    'plural' => 'العناصر',
     'form' => [
-        'domain' => 'المجال',
-        'category' => 'العنصر الرئيسي',
+        'domain' => 'الفئة',
+        'category' => 'المجال',
         'question' => 'السؤال التدقيقي',
         'true_case' => 'الأجابة ب نعم ',
         'false_case' => 'الأجابة ب لا',
@@ -14,12 +14,12 @@ return [
     ],
     'table' => [
         'order' => 'م',
-        'domain' => 'المجال',
+        'domain' => 'الفئة',
         'category' => 'العنصر الرئيسي',
         'question' => 'السؤال التدقيقي',
     ],
     'filters' => [
-        'domain' => 'المجال',
-        'category' => 'العنصر الرئيسي',
+        'domain' => 'الفئة',
+        'category' => 'المجال',
     ],
 ];

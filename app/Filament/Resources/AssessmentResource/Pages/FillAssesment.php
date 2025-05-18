@@ -4,7 +4,7 @@ namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
 use App\Filament\Resources\AssessmentResource\Widgets\DomainSelectorWidget;
-use App\Models\Assesment;
+use App\Models\Assessment;
 use App\Models\AssesmentItem;
 use App\Models\Criterion;
 use Filament\Actions\Action;
@@ -12,6 +12,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Concerns\InteractsWithForms;
 
@@ -22,7 +23,7 @@ class FillAssesment extends Page implements HasForms
     protected static string $resource = AssessmentResource::class;
     protected static string $view = 'filament.resources.assessment-resource.pages.fill-assessment';
 
-    public Assesment $record;
+    public Assessment $record;
     public array $formResponses = [];
     public ?int $selectedDomain = null;
 
@@ -58,7 +59,7 @@ class FillAssesment extends Page implements HasForms
         foreach ($criteria as $criterion) {
             $item = AssesmentItem::firstOrCreate(
                 [
-                    'assessment_id' => $this->record->id,
+                    'assesment_id' => $this->record->id,
                     'criteria_id'   => $criterion->id,
                 ],
                 ['is_available' => false, 'notes' => '']
@@ -83,7 +84,7 @@ class FillAssesment extends Page implements HasForms
         DB::transaction(function () {
             foreach ($this->formResponses as $critId => $resp) {
                 AssesmentItem::updateOrCreate(
-                    ['assessment_id' => $this->record->id, 'criteria_id' => $critId],
+                    ['assesment_id' => $this->record->id, 'criteria_id' => $critId],
                     ['is_available' => $resp['is_available'] ?? false, 'notes' => $resp['notes'] ?? '']
                 );
             }
@@ -114,11 +115,19 @@ class FillAssesment extends Page implements HasForms
 
     protected function getViewData(): array
     {
+        $locale = session('locale', 'ar');
+        App::setLocale($locale);
+        session(['locale' => $locale]);
         $query = Criterion::with('category')->orderBy('order');
         if ($this->selectedDomain) {
             $query->whereHas('category', fn($q) => $q->where('domain_id', $this->selectedDomain));
         }
-        $grouped = $query->get()->groupBy(fn($c) => $c->category->name);
+        $grouped = $query->get()->groupBy(function($c)use($locale) {
+            if($locale === 'ar') {
+                return  $c->category->name_ar;
+            }
+            return $c->category->name;
+        });
 
         return array_merge(parent::getViewData(), [
             'criteria' => $grouped,

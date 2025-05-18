@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\App; @endphp
 <x-filament-panels::page>
     {{-- Header widgets (if any) --}}
     @if ($this->hasHeaderWidgets)
@@ -7,7 +8,13 @@
             :data="$this->getWidgetsData()"
         />
     @endif
+@php
 
+      $locale = session('locale', 'ar');
+          App::setLocale($locale);
+          session(['locale' => $locale]);
+
+          @endphp
     {{-- Questions table --}}
     <div class="p-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-auto">
         <table class="table-fixed w-full border-collapse">
@@ -17,7 +24,7 @@
                     #
                 </th>
                 <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
-                    المعايير / السؤال
+                    {{__('assessment.view.questions')}}
                 </th>
             </tr>
             </thead>
@@ -38,7 +45,7 @@
                             #{{ $criterion->order }}
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
-                            {{ $criterion->question }}
+                            @if($locale == 'ar') {{ $criterion->question_ar }}@endif @if($locale == 'en') {{ $criterion->question }} @endif
                         </td>
                     </tr>
                 @endforeach

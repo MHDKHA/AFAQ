@@ -14,23 +14,28 @@ class Criterion extends Model
     protected $table = 'criteria';
 
     protected $fillable = [
-        'domain_id',
         'category_id',
+        'domain_id',
         'question',
+        'question_ar',
         'order',
-        'true_case',
-        'false_case',
+        'is_premium',
+    ];
+
+    protected $casts = [
+        'is_premium' => 'boolean',
     ];
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class);
     }
 
     public function assessmentItems(): HasMany
     {
-        return $this->hasMany(AssesmentItem::class);
+        return $this->hasMany(AssesmentItem::class, 'criteria_id');
     }
+
 
     public function domain(): BelongsTo
     {

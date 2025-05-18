@@ -4,9 +4,12 @@ namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
 use App\Models\Assesment;
+use App\Models\Assessment;
 use App\Models\Criterion;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\App;
 
 class ViewAssesment extends Page
 {
@@ -14,7 +17,7 @@ class ViewAssesment extends Page
     protected static string $view     = 'filament.resources.assessment-resource.pages.view-assessment';
 
     // Declare this so Blade can see it
-    public Assesment $record;
+    public Assessment $record;
 
     protected bool $hasHeaderWidgets = true;
     protected bool $hasFooterWidgets = true;
@@ -59,10 +62,20 @@ class ViewAssesment extends Page
 
     protected function getViewData(): array
     {
+        $locale = session('locale', 'ar');
+        App::setLocale($locale);
+        session(['locale' => $locale]);
         $criteria = Criterion::with('category')
             ->orderBy('order')
             ->get()
-            ->groupBy(fn($c) => $c->category->name);
+            ->groupBy(function($c)use($locale) {
+                if($locale === 'ar') {
+                return  $c->category->name_ar;
+                }
+               return $c->category->name;
+            });
+
+
 
         return array_merge(parent::getViewData(), [
             'criteria' => $criteria,

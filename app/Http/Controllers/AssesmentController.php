@@ -4,7 +4,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Assesment;
+use App\Models\Assessment;
 use App\Models\AssesmentItem;
 use App\Models\Category;
 use App\Models\Domain;
@@ -12,8 +12,68 @@ use Illuminate\Http\Request;
 
 class AssesmentController extends Controller
 {
-    public function print(Assesment $assessment)
+    public function print(Assessment $assessment)
     {
+
+        $labels = [
+            'التحسين',
+            'تقييم الأداء',
+            'التشغيل',
+            'الدعم',
+            'التخطيط',
+            'القيادة',
+            'التأسيس الإداري',
+        ];
+
+// 2. manually define your three data sets
+        $available    = [1, 0, 3, 0, 0, 3, 1];  // متوفر
+        $notAvailable = [6, 6, 10, 5, 3, 4, 7]; // غير متوفر
+        $notApplied   = [0, 0, 0, 0, 0, 0, 0];  // لا ينطبق
+
+        $chartConfig = [
+            'type' => 'bar',
+            'data' => [
+                'labels'   => $labels,
+                'datasets' => [
+                    [
+                        'label'           => 'متوفر',
+                        'data'            => $available,
+                        'backgroundColor' => 'Blue',  // blue-ish
+                    ],
+                    [
+                        'label'           => 'غير متوفر',
+                        'data'            => $notAvailable,
+                        'backgroundColor' => 'red',  // red-ish
+                    ],
+                    [
+                        'label'           => 'لا ينطبق',
+                        'data'            => $notApplied,
+                        'backgroundColor' => ' gray',  // green-ish
+                    ],
+                ],
+            ],
+            'options' => [
+                'indexAxis' => 'x',
+                'plugins'   => [
+                    'legend' => [
+                        'position' => 'bottom',
+                    ],
+                ],
+                'scales' => [
+                    'y' => [
+                        'beginAtZero' => true,
+                        'ticks'       => [
+                            'stepSize' => 1,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+// 3. build the QuickChart URL
+        $quickChartUrl = 'https://quickchart.io/chart?width=800&height=400&c='
+            . urlencode(json_encode($chartConfig));
+
         // 1) Load domains with their categories → criteria (ordered)
         $domains = Domain::with(['categories.criteria' => function ($query) {
             $query->orderBy('order');
@@ -22,7 +82,7 @@ class AssesmentController extends Controller
             ->get();
 
         // 2) Load all assessment items for this assessment
-        $assessmentItems = AssesmentItem::where('assessment_id', $assessment->id)->get();
+        $assessmentItems = AssesmentItem::where('assesment_id', $assessment->id)->get();
 
         // 3) Compute totals and percentages
         $totalItems       = $assessmentItems->count();
@@ -82,6 +142,7 @@ class AssesmentController extends Controller
             'availableRate'    => $availableRate,
             'unavailableRate'  => $unavailableRate,
             'chartUrl'         => $chartUrl,
+            'quickChartUrl'         => $quickChartUrl,
         ]);
     }
 }

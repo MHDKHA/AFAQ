@@ -14,18 +14,18 @@ class Category extends Model
     protected $fillable = [
         'domain_id',
         'name',
+        'name_ar',
         'order',
     ];
 
     public function domain(): BelongsTo
     {
-        return $this->belongsTo(Domain::class, 'domain_id');
+        return $this->belongsTo(Domain::class);
     }
 
     public function criteria(): HasMany
     {
-        return $this->hasMany(Criterion::class, 'category_id')->orderBy('order');
+        return $this->hasMany(Criterion::class)
+            ->orderBy('order');
     }
-
-
 }

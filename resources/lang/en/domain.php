@@ -4,7 +4,12 @@ return [
     'navigation_label' => 'Domains',
     'model' => 'Domain',
     'plural' => 'Domains',
-    'name' => 'Name',
+    'name' => 'English',
+    'name_ar' => 'Arabic',
     'order' => 'Order',
-    'categories_count' => 'Categories Count', // Changed from 'Items Count'
+    'categories_count' => 'Categories Count',
+    'table' => [
+        'name' => 'Name',
+
+    ],
 ];

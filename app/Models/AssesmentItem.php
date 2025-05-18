@@ -11,8 +11,9 @@ class AssesmentItem extends Model
     use HasFactory;
 
     protected $table = 'assessment_items';
+
     protected $fillable = [
-        'assessment_id',
+        'assesment_id',
         'criteria_id',
         'is_available',
         'notes',
@@ -22,9 +23,9 @@ class AssesmentItem extends Model
         'is_available' => 'boolean',
     ];
 
-    public function assessment(): BelongsTo
+    public function assesment(): BelongsTo
     {
-        return $this->belongsTo(Assesment::class);
+        return $this->belongsTo(Assessment::class, 'assesment_id');
     }
 
     public function criterion(): BelongsTo
@@ -32,3 +33,4 @@ class AssesmentItem extends Model
         return $this->belongsTo(Criterion::class, 'criteria_id');
     }
 }
+

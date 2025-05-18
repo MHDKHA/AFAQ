@@ -34,5 +34,19 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
+    'deepseek' => [
+        'key'   => env('DEEPSEEK_API_KEY'),
+        'url'   => 'https://api.deepseek.com/chat/completions',
+        'model' => 'deepseek-chat',
+    ],
+    'openrouter' => [
+        'key'   => env('OPENROUTER_API_KEY'),
+        'url'   => 'https://openrouter.ai/api/v1/chat/completions',
+        'model' => 'deepseek/deepseek-r1:free',
+    ],
+
 
 ];

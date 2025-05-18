@@ -8,7 +8,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Table;
+use TomatoPHP\FilamentTranslationComponent\Components\Translation;
 
 class DomainResource extends Resource
 {
@@ -41,10 +43,15 @@ class DomainResource extends Resource
                     ->label(__('domain.name'))
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('name_ar')
+                    ->label(__('domain.name_ar'))
+                    ->required()
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('order')
                     ->label(__('domain.order'))
                     ->integer()
                     ->default(0),
+
             ]);
     }
 
@@ -52,9 +59,15 @@ class DomainResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label(__('domain.name'))
-                    ->searchable(),
+                ColumnGroup::make(__('domain.table.name'), [
+                    Tables\Columns\TextColumn::make('name')
+                        ->label(__('domain.name'))
+                        ->searchable(),
+                    Tables\Columns\TextColumn::make('name_ar')
+                        ->label(__('domain.name_ar'))
+                        ->searchable(),
+                ]),
+
                 Tables\Columns\TextColumn::make('order')
                     ->label(__('domain.order'))
                     ->sortable(),

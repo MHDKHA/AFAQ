@@ -9,7 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditAssessmentReport extends EditRecord
 {
     protected static string $resource = AssessmentReportResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [
@@ -38,7 +38,7 @@ class EditAssessmentReport extends EditRecord
         }
 
         // Transform assessment results for repeaters
-        foreach ($data['assessment_results'] as $key => $section) {
+        foreach ($data['assessment_results'] ?? [] as $key => $section) {
             if (isset($section['notes'])) {
                 $data['assessment_results'][$key]['notes'] = array_map(fn ($note) => ['item' => $note], $section['notes']);
             }

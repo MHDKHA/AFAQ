@@ -1,12 +1,25 @@
+
+
+@php
+
+    use Illuminate\Support\Facades\App;
+    $locale = session('locale', 'ar');
+
+        App::setLocale($locale);
+        session(['locale' => $locale]);
+
+@endphp
 <x-filament-panels::page>
+
     <div class="p-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-auto">
         <table class="table-fixed w-full border-collapse">
             <thead>
             <tr class="bg-gray-100 dark:bg-gray-800">
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">#</th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">المعايير / السؤال</th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">متوفر</th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">ملاحظات</th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">#
+                </th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.view.questions')}}</th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.fill.available')}}</th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.fill.notes')}}</th>
             </tr>
             </thead>
             <tbody>
@@ -24,7 +37,7 @@
                             #{{ $criterion->order }}
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
-                            {{ $criterion->question }}
+                            @if($locale == 'ar') {{ $criterion->question_ar }}@endif @if($locale == 'en')   {{ $criterion->question }} @endif
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center">
                             <input

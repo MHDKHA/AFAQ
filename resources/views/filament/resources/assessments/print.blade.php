@@ -146,7 +146,7 @@
     </div>
 
     @foreach($domains as $domain)
-        <div class="domain-header">{{ $domain->name }}</div>
+{{--        <div class="domain-header">{{ $domain->name }}</div>--}}
 
         @foreach($domain->categories as $category)
             <div class="category-header">{{ $category->name }}</div>

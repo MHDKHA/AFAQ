@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Filament\Widgets\AssessmentOverviewWidget;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -16,4 +18,11 @@ class ListAssessments extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+//    protected function getWidgets(): array
+//    {
+//        return [
+//            AssessmentOverviewWidget::class,
+//        ];
+//    }
+
 }

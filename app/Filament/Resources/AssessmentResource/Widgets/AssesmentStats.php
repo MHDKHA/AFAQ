@@ -2,23 +2,30 @@
 
 namespace App\Filament\Resources\AssessmentResource\Widgets;
 
-use App\Models\Assesment;
+use App\Models\Assessment;
 use App\Models\Criterion;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\App;
 
 class AssesmentStats extends BaseWidget
 {
 
-    public ?Assesment $record = null;
+    public ?Assessment $record = null;
     protected function getStats(): array
     {
         // If for some reason $record isn't injected yet, return nothing
         if (! $this->record) {
             return [];
         }
+        $locale = session('locale', 'ar');
+        App::setLocale($locale);
+        session(['locale' => $locale]);
+
+
 
         $assessment = $this->record;
+        $assessmentName = $locale == 'ar' ? $assessment->name_ar : $assessment->name;
         $totalItems       = $assessment->items()->count();
         $availableItems   = $assessment->items()->where('is_available', true)->count();
         $unavailableItems = $totalItems - $availableItems;
@@ -27,7 +34,7 @@ class AssesmentStats extends BaseWidget
         $completionRate = $totalItems > 0 ? round(($totalItems      / $availableItems)          * 100) : 0;
 
         return [
-            Stat::make(__('assessment.stats.assessment_name'),   $assessment->name)
+            Stat::make(__('assessment.stats.assessment_name'),   $assessmentName)
                 ->description(__('assessment.stats.assessment_date', ['date' => $assessment->date->format('Y-m-d')]))
                 ->color('primary'),
 

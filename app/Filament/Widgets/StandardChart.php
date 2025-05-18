@@ -34,7 +34,7 @@ class StandardChart extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'عدد الأسئلة',
+                    'name' => __('عدد الأسئلة'),
                     'data' => $counts,
                 ],
             ],

@@ -126,6 +126,7 @@
             <strong>تاريخ إنشاء التقييم:</strong> {{ $assessment->created_at->format('Y-m-d') }}
         </div>
     </div>
+
     <div class="chart">
         <img src="{{ $chartUrl }}"
              alt="معايير التقييم"
