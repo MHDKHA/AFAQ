@@ -20,6 +20,9 @@ class Assessment extends Model
         'description',
         'user_id',
         'company_id',
+        'registration_id', // New field to link to user registrations
+
+
     ];
     protected $casts = [
         'date' => 'date',
@@ -41,7 +44,10 @@ class Assessment extends Model
     {
         return $this->hasMany(AssesmentItem::class, 'assesment_id', 'id');
     }
-
+    public function registration(): BelongsTo
+    {
+        return $this->belongsTo(UserRegistration::class, 'registration_id');
+    }
     public function report()
     {
         return $this->hasOne(AssessmentReport::class, 'assesment_id', 'id');

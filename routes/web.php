@@ -10,27 +10,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+use Inertia\Inertia;
 
-// Create a new route in your web.php
-Route::get('/debug-shield', function () {
-    $user = auth()->user();
-    $data = [
-        'user_id' => $user->id,
-        'user_email' => $user->email,
-        'roles' => $user->roles->pluck('name')->toArray(),
-        'direct_permissions' => $user->getDirectPermissions()->pluck('name')->toArray(),
-        'all_permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
-        'can_view_any_assessment' => $user->can('view_any_assessment'),
-        'can_view_any_assesment' => $user->can('view_any_assesment'),
-        'policy_check' => app(\App\Policies\AssesmentPolicy::class)->viewAny($user),
-        'request_path' => request()->path(),
-        'route_name' => request()->route() ? request()->route()->getName() : null,
-    ];
-
-    return response()->json($data);
+Route::get('/hrbp-guide', function () {
+    return Inertia::render('Landing');
 });
 
+use App\Http\Controllers\RegistrationController;
 
+
+Route::middleware('web')->group(function () {
+    Route::get('/register', [RegistrationController::class, 'index'])->name('registration.form');
+    Route::post('/register', [RegistrationController::class, 'store'])->name('registration.store');
+
+});
 
 Route::get('/assessment/{assessment}/print', [AssesmentController::class, 'print'])
     ->name('assessment.print');

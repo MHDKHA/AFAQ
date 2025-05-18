@@ -1,0 +1,190 @@
+/* public/css/landing.css */
+:root {
+    --primary-color: #341b6d;
+    --secondary-color: #f39c12;
+    --text-color: #ffffff;
+    --input-bg: #ffffff;
+    --btn-primary-bg: #ffffff;
+    --btn-primary-text: #341b6d;
+    --btn-download-bg: #f39c12;
+    --btn-download-text: #ffffff;
+    --header-height: 80px;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+}
+
+.landing-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 3rem;
+    background-color: var(--primary-color);
+    height: var(--header-height);
+}
+
+.logo {
+    height: 40px;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+nav ul li a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-outlined {
+    background: transparent;
+    border: 2px solid var(--text-color);
+    color: var(--text-color);
+}
+
+.btn-primary {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+}
+
+/* Main Content Styles */
+main {
+    flex: 1;
+    padding: 2rem 3rem;
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.text-content {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.flex-container {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-container {
+    flex: 1;
+    max-width: 600px;
+}
+
+.guide-preview {
+    width: 100%;
+    height: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.form-container {
+    flex: 1;
+    max-width: 500px;
+}
+
+h2 {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.form-field {
+    margin-bottom: 1rem;
+}
+
+input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    box-sizing: border-box;
+}
+
+.btn-download {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    background-color: var(--btn-download-bg);
+    color: var(--btn-download-text);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .flex-container {
+        flex-direction: column;
+    }
+
+    .image-container, .form-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        height: auto;
+        padding: 1rem;
+    }
+
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+        padding: 0;
+    }
+
+    .cta-buttons {
+        margin-top: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
+}
