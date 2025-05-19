@@ -31,3 +31,12 @@ Route::get('/assessment/{assessment}/print', [AssesmentController::class, 'print
 Route::get('/assessment-reports/{record}/export-pdf', [ReportController::class, 'exportPdf'])
     ->name('assessment-reports.export-pdf')
     ->middleware(['auth']);
+
+
+use App\Http\Controllers\AssessmentDashboardController;
+
+Route::get('/assessment-dashboard/{assessment}', [AssessmentDashboardController::class, 'show'])
+    ->name('assessment-dashboard.show');
+
+Route::post('/assessment-dashboard/{assessment}/send-report', [AssessmentDashboardController::class, 'sendReport'])
+    ->name('assessment-dashboard.send-report');

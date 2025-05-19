@@ -179,9 +179,9 @@ const RegistrationForm = () => {
 
             <style jsx>{`
                 :root {
-                    --primary: #4a2a81;
-                    --primary-light: #6a3fb8;
-                    --accent: #ff9500;
+                    --primary: #2a6081; /* Changed from purple (#4a2a81) to blue-ish */
+                    --primary-light: #3f8ab8; /* Changed to match the new primary color */
+                    --accent: #f5f3e6; /* Changed from yellow (#ff9500) to egg-white */
                     --dark: #1a1a2e;
                     --light: #ffffff;
                     --background: #f8f9fc;
@@ -316,7 +316,7 @@ const RegistrationForm = () => {
                 .form-control:focus {
                     border-color: var(--primary-light);
                     outline: 0;
-                    box-shadow: 0 0 0 3px rgba(74, 42, 129, 0.1);
+                    box-shadow: 0 0 0 3px rgba(42, 96, 129, 0.1);
                 }
 
                 .btn-primary {
@@ -326,7 +326,7 @@ const RegistrationForm = () => {
                     font-size: 1.1rem;
                     font-weight: 600;
                     text-align: center;
-                    color: var(--light);
+                    color: var(--dark); /* Changed text color to dark for better visibility on egg-white */
                     background-color: var(--accent);
                     border: none;
                     border-radius: 8px;
@@ -336,9 +336,9 @@ const RegistrationForm = () => {
                 }
 
                 .btn-primary:hover:not(:disabled) {
-                    background-color: #e68600;
+                    background-color: #e8e6d9; /* Slightly darker egg-white on hover */
                     transform: translateY(-2px);
-                    box-shadow: 0 8px 15px rgba(255, 149, 0, 0.2);
+                    box-shadow: 0 8px 15px rgba(245, 243, 230, 0.2);
                 }
 
                 .btn-primary:disabled {
@@ -356,7 +356,7 @@ const RegistrationForm = () => {
                     width: 500px;
                     height: 500px;
                     border-radius: 50%;
-                    background: linear-gradient(45deg, var(--accent), #ff5e62);
+                    background: linear-gradient(45deg, var(--accent), #e8e6d9); /* Changed gradient */
                     top: -200px;
                     right: -200px;
                 }
@@ -365,7 +365,7 @@ const RegistrationForm = () => {
                     width: 300px;
                     height: 300px;
                     border-radius: 50%;
-                    background: linear-gradient(135deg, #4facfe, #00f2fe);
+                    background: linear-gradient(135deg, #4facfe, #2a6081); /* Changed gradient */
                     bottom: -100px;
                     left: -100px;
                 }
