@@ -40,3 +40,6 @@ Route::get('/assessment-dashboard/{assessment}', [AssessmentDashboardController:
 
 Route::post('/assessment-dashboard/{assessment}/send-report', [AssessmentDashboardController::class, 'sendReport'])
     ->name('assessment-dashboard.send-report');
+
+
+Route::post('/assessments/{id}/save', [AssessmentDashboardController::class, 'save'])->name('assessments.save');

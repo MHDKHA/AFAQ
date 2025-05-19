@@ -1,24 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AssessmentReportDashboard from './AssessmentResultsPage.jsx'; // Assuming AssessmentReportDashboard.jsx is in the same directory or adjust path accordingly
 
 const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
     const [currentLocale, setCurrentLocale] = useState(locale);
     const [showReport, setShowReport] = useState(false); // State to control report visibility
+    const [isSaved, setIsSaved] = useState(false); // Track if assessment has been saved
+    const [showNotification, setShowNotification] = useState(false); // State for notification visibility
 
     const { data, setData, post, processing, errors } = useForm({
         responses: {}, // Form responses will be stored here
     });
 
+    // Load existing assessment data if available
+    useEffect(() => {
+        if (registration.assessment_data) {
+            try {
+                const assessmentData = typeof registration.assessment_data === 'string'
+                    ? JSON.parse(registration.assessment_data)
+                    : registration.assessment_data;
+
+                if (assessmentData.responses) {
+                    setData('responses', assessmentData.responses);
+                    setIsSaved(true); // Mark as saved if we have previous data
+                }
+            } catch (e) {
+                console.error("Error parsing assessment data:", e);
+            }
+        }
+    }, [registration]);
+
     // Handle changes to radio inputs and text inputs
     const handleInputChange = (criterionId, field, value) => {
-        setData('responses', { // Corrected: Removed "WS"
+        setData('responses', {
             ...data.responses,
             [criterionId]: {
                 ...(data.responses[criterionId] || {}),
                 [field]: value,
             },
         });
+        setIsSaved(false); // Mark as unsaved when changes are made
     };
 
     // Toggle language
@@ -26,28 +47,48 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
         setCurrentLocale(prevLocale => (prevLocale === 'en' ? 'ar' : 'en'));
     };
 
-    // Save assessment data
+    // Save assessment data - FIXED notification
+    // Updated handleSave function to use the correct route
     const handleSave = () => {
-        post(route('frontend.assessment.save', registration.id), {
-            // 'data' (which includes 'responses') is automatically sent by Inertia's post method
+        // Use the correct route name as defined in your routes file
+        post(route('assessments.save', registration.id), {
             onSuccess: () => {
-                const notification = document.getElementById('success-notification');
-                if (notification) {
-                    notification.classList.remove('hidden');
-                    setTimeout(() => {
-                        notification.classList.add('hidden');
-                    }, 3000);
-                }
-                setShowReport(true); // Show the report dashboard
+                setIsSaved(true);
+                setShowNotification(true);
+                setTimeout(() => {
+                    setShowNotification(false);
+                }, 3000);
             },
             onError: (pageErrors) => {
                 console.error("Error saving assessment:", pageErrors);
-                // Optionally, display error notifications to the user
+                // Show error notification if needed
+                alert("Failed to save assessment. Please try again.");
             }
         });
     };
 
-    // Calculate progress
+
+    // Toggle report view with save check - FIXED
+    const toggleReport = () => {
+        // If we're in the form view and trying to switch to report view
+        if (!showReport) {
+            // Check if data is unsaved
+            if (!isSaved) {
+                // Ask user if they want to save before viewing the report
+                if (window.confirm(t.unsavedChanges)) {
+                    handleSave();
+                    // Set a timeout to allow save to complete before showing report
+                    setTimeout(() => setShowReport(true), 1000);
+                    return;
+                }
+            }
+        }
+
+        // Toggle the view state
+        setShowReport(!showReport);
+    };
+
+    // Calculate progress - FIXED
     const calculateProgress = () => {
         if (!criteria || Object.keys(criteria).length === 0) return 0;
 
@@ -58,10 +99,10 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
             if (Array.isArray(categoryData)) {
                 totalCriteria += categoryData.length;
                 categoryData.forEach(criterion => {
+                    // Count a criterion as answered if it has a response selection
                     if (
                         data.responses[criterion.id] &&
-                        (data.responses[criterion.id].response !== undefined ||
-                            (data.responses[criterion.id].notes && data.responses[criterion.id].notes.trim() !== ''))
+                        data.responses[criterion.id].response !== undefined
                     ) {
                         answeredCriteria++;
                     }
@@ -70,6 +111,13 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
         });
 
         if (totalCriteria === 0) return 0;
+
+        // If all criteria are answered, show 100% exactly
+        if (answeredCriteria === totalCriteria) {
+            return 100;
+        }
+
+        // Otherwise, use regular rounding
         return Math.round((answeredCriteria / totalCriteria) * 100);
     };
 
@@ -92,7 +140,9 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
             addNotes: "Add notes here...",
             questionList: "Questions",
             assessmentReport: "Assessment Report",
-            backToAssessment: "Back to Assessment"
+            viewReport: "View Report",
+            backToAssessment: "Back to Assessment",
+            unsavedChanges: "You have unsaved changes. Save before continuing?"
         },
         ar: {
             assessment: "التقييم",
@@ -109,7 +159,9 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
             addNotes: "أضف ملاحظات هنا...",
             questionList: "الأسئلة",
             assessmentReport: "تقرير التقييم",
-            backToAssessment: "العودة للتقييم"
+            viewReport: "عرض التقرير",
+            backToAssessment: "العودة للتقييم",
+            unsavedChanges: "لديك تغييرات غير محفوظة. هل تريد الحفظ قبل المتابعة؟"
         }
     };
 
@@ -156,32 +208,33 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                         </div>
                     )}
 
-                    <div className="sidebar-footer">
-                        {showReport ? (
-                            <button
-                                type="button"
-                                onClick={() => setShowReport(false)}
-                                className="save-button" // Can reuse style or create a new one
-                            >
-                                {t.backToAssessment}
-                            </button>
-                        ) : (
+                    <div className="sidebar-actions">
+                        {!showReport && (
                             <button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={processing}
-                                className="save-button"
+                                disabled={processing || isSaved}
+                                className={`action-button save-button ${isSaved ? 'saved' : ''}`}
                             >
-                                {processing ? t.saving : t.saveAssessment}
+                                {processing ? t.saving : isSaved ? '✓ ' + t.saveAssessment : t.saveAssessment}
                             </button>
                         )}
+
+                        <button
+                            type="button"
+                            onClick={toggleReport}
+                            className="action-button report-button"
+                        >
+                            {showReport ? t.backToAssessment : t.viewReport}
+                        </button>
                     </div>
                 </div>
 
                 <div className="main-content">
                     {showReport ? (
                         <AssessmentReportDashboard
-                            assessmentId={registration.id}
+                            registration={registration}
+                            assessmentData={data.responses}
                             locale={currentLocale}
                         />
                     ) : (
@@ -191,12 +244,15 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                                 <p>{t.welcome}, {registration.name}! {t.pleaseComplete}</p>
                             </div>
 
-                            <div id="success-notification" className="success-notification hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="notification-icon">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>{t.savedSuccessfully}</span>
-                            </div>
+                            {/* Updated notification using state */}
+                            {showNotification && (
+                                <div className="success-notification">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="notification-icon">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span>{t.savedSuccessfully}</span>
+                                </div>
+                            )}
 
                             <div className="criteria-container">
                                 <div className="questions-section">
@@ -249,14 +305,23 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                             </div>
 
                             <div className="mobile-actions">
-                                <button
-                                    type="button"
-                                    onClick={handleSave}
-                                    disabled={processing}
-                                    className="mobile-save-button"
-                                >
-                                    {processing ? t.saving : t.saveAssessment}
-                                </button>
+                                <div className="mobile-buttons-container">
+                                    <button
+                                        type="button"
+                                        onClick={handleSave}
+                                        disabled={processing || isSaved}
+                                        className={`mobile-button mobile-save-button ${isSaved ? 'saved' : ''}`}
+                                    >
+                                        {processing ? t.saving : isSaved ? '✓' : t.saveAssessment}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={toggleReport}
+                                        className="mobile-button mobile-report-button"
+                                    >
+                                        {t.viewReport}
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}
@@ -264,7 +329,6 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
             </div>
 
             <style jsx>{`
-                /* Your existing styles from AssessmentPage.jsx go here */
                 /* CSS variables and all other styles remain the same */
                 :root {
                   --primary: #2b6cb0;
@@ -435,22 +499,28 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                   transition: width 0.3s ease;
                 }
 
-                .sidebar-footer {
+                .sidebar-actions {
                   padding: 1.5rem;
-                  border-top: 1px solid rgba(255, 255, 255, 0.1);
                   margin-top: auto;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.75rem;
+                  border-top: 1px solid rgba(255, 255, 255, 0.1);
                 }
 
-                .save-button {
+                .action-button {
                   width: 100%;
                   padding: 0.75rem;
-                  background-color: var(--accent);
-                  color: var(--primary-dark);
                   border: none;
                   border-radius: 6px;
                   font-weight: 600;
                   cursor: pointer;
                   transition: var(--transition);
+                }
+
+                .save-button {
+                  background-color: var(--accent);
+                  color: var(--primary-dark);
                 }
 
                 .save-button:hover:not(:disabled) {
@@ -460,6 +530,20 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                 .save-button:disabled {
                   opacity: 0.7;
                   cursor: not-allowed;
+                }
+
+                .save-button.saved {
+                  background-color: var(--success);
+                  color: var(--light);
+                }
+
+                .report-button {
+                  background-color: var(--primary-light);
+                  color: var(--light);
+                }
+
+                .report-button:hover {
+                  background-color: var(--primary);
                 }
 
                 /* Main content styles */
@@ -502,10 +586,8 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                   border-radius: 6px;
                   margin-bottom: 1.5rem;
                   animation: slideIn 0.3s ease-out;
-                }
-
-                .hidden {
-                  display: none;
+                  z-index: 5; /* Added z-index to ensure visibility */
+                  position: relative; /* Added position to enable z-index */
                 }
 
                 @keyframes slideIn {
@@ -639,11 +721,14 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                   z-index: 10;
                 }
 
-                .mobile-save-button {
-                  width: 100%;
+                .mobile-buttons-container {
+                  display: flex;
+                  gap: 0.5rem;
+                }
+
+                .mobile-button {
+                  flex: 1;
                   padding: 0.75rem;
-                  background-color: var(--primary);
-                  color: var(--light);
                   border: none;
                   border-radius: 6px;
                   font-weight: 600;
@@ -651,14 +736,25 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                   transition: var(--transition);
                 }
 
+                .mobile-save-button {
+                  background-color: var(--accent);
+                  color: var(--primary-dark);
+                }
+
+                .mobile-save-button.saved {
+                  background-color: var(--success);
+                  color: var(--light);
+                }
+
+                .mobile-report-button {
+                  background-color: var(--primary-light);
+                  color: var(--light);
+                }
+
                 @media (max-width: 992px) {
                   .sidebar {
                     width: 70px;
                     overflow: hidden;
-                  }
-
-                  .sidebar:hover { /* Optional: expand sidebar on hover for small screens */
-                     /* width: 280px; */ /* Decide on behavior */
                   }
 
                   .logo-text, .user-details, .progress-label span:first-child, .language-toggle {
@@ -677,15 +773,13 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                      margin-left: 0;
                    }
 
-
-                  .sidebar-footer {
-                    /* For mobile, save button is in .mobile-actions or the button in footer handles "Back to Assessment" */
-                     display: block; /* Ensure it's visible for the "Back to Assessment" button */
+                  .sidebar-actions {
+                    padding: 1rem 0.5rem;
                   }
-                  .sidebar-footer .save-button { /* Ensure text is visible or use icon */
-                      font-size: 0.8rem; /* Adjust if text is too long */
+                  .action-button {
+                    font-size: 0.7rem;
+                    padding: 0.5rem 0.25rem;
                   }
-
 
                   .main-content {
                     margin-left: 70px;
@@ -699,7 +793,7 @@ const AssessmentPage = ({ registration, criteria, locale = 'en' }) => {
                   }
 
                   .mobile-actions {
-                    display: ${showReport ? 'none' : 'block'}; /* Show mobile save button for form view only */
+                    display: ${showReport ? 'none' : 'block'}; /* Show mobile buttons for form view only */
                   }
 
                   .radio-group {

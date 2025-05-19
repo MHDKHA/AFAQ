@@ -6,6 +6,7 @@ use App\Models\Assessment;
 use App\Models\AssesmentItem;
 use App\Models\Criterion;
 use App\Models\Domain;
+use App\Models\UserRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -111,5 +112,29 @@ class AssessmentDashboardController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    public function save(Request $request, $id)
+    {
+        $registration = UserRegistration::findOrFail($id);
+
+        // Validate the incoming request
+        $validated = $request->validate([
+            'responses' => 'required|array',
+        ]);
+
+        // Update or create assessment
+        $assessment = Assessment::updateOrCreate(
+            ['registration_id' => $id],
+            ['responses' => $validated['responses']]
+        );
+
+        // Return success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Assessment saved successfully',
+        ]);
     }
 }
