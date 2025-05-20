@@ -1,25 +1,29 @@
-
-
 @php
-
     use Illuminate\Support\Facades\App;
     $locale = session('locale', 'ar');
 
-        App::setLocale($locale);
-        session(['locale' => $locale]);
+    App::setLocale($locale);
+    session(['locale' => $locale]);
 
 @endphp
 <x-filament-panels::page>
-
     <div class="p-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-auto">
+        <div class="mb-4">
+            <h2 class="text-xl font-bold">{{ $record->tool?->name }} - {{ $record?->name }}</h2>
+        </div>
         <table class="table-fixed w-full border-collapse">
             <thead>
             <tr class="bg-gray-100 dark:bg-gray-800">
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">#
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">#</th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
+                    {{__('assessment.view.questions')}}
                 </th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.view.questions')}}</th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.fill.available')}}</th>
-                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">{{__('assessment.fill.notes')}}</th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
+                    {{__('assessment.fill.available')}}
+                </th>
+                <th class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
+                    {{__('assessment.fill.notes')}}
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -37,7 +41,8 @@
                             #{{ $criterion->order }}
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-gray-700 dark:text-gray-200">
-                            @if($locale == 'ar') {{ $criterion->question_ar }}@endif @if($locale == 'en')   {{ $criterion->question }} @endif
+                            @if($locale == 'ar') {{ $criterion->question_ar }}@endif
+                            @if($locale == 'en') {{ $criterion->question }} @endif
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1 text-center">
                             <input
@@ -47,13 +52,13 @@
                             />
                         </td>
                         <td class="border border-gray-200 dark:border-gray-700 px-2 py-1">
-                                <textarea
-                                    wire:model="formResponses.{{ $criterion->id }}.notes"
-                                    class="w-full h-16 resize-none border rounded px-1 py-1
-                                           border-gray-200 dark:border-gray-700
-                                           bg-white dark:bg-gray-900
-                                           text-gray-700 dark:text-gray-200"
-                                ></textarea>
+                            <textarea
+                                wire:model="formResponses.{{ $criterion->id }}.notes"
+                                class="w-full h-16 resize-none border rounded px-1 py-1
+                                       border-gray-200 dark:border-gray-700
+                                       bg-white dark:bg-gray-900
+                                       text-gray-700 dark:text-gray-200"
+                            ></textarea>
                         </td>
                     </tr>
                 @endforeach

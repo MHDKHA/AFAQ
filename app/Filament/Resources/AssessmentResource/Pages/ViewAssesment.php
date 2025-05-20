@@ -46,12 +46,12 @@ class ViewAssesment extends Page
         ];
     }
 
-    protected function getFooterWidgets(): array
-    {
-        return [
-            \App\Filament\Resources\AssessmentResource\Widgets\AssesmentResults::class,
-        ];
-    }
+//    protected function getFooterWidgets(): array
+//    {
+//        return [
+//            \App\Filament\Resources\AssessmentResource\Widgets\AssesmentResults::class,
+//        ];
+//    }
 
     public function getWidgetsData(): array
     {
@@ -62,20 +62,17 @@ class ViewAssesment extends Page
 
     protected function getViewData(): array
     {
-        $locale = session('locale', 'ar');
-        App::setLocale($locale);
-        session(['locale' => $locale]);
+        // only criteria under *this* assessment’s tool.domains
+        $domainIds = $this->record->tool->domains->pluck('id');
+
         $criteria = Criterion::with('category')
+            ->whereHas('category', fn($q) => $q->whereIn('domain_id', $domainIds))
             ->orderBy('order')
             ->get()
-            ->groupBy(function($c)use($locale) {
-                if($locale === 'ar') {
-                return  $c->category->name_ar;
-                }
-               return $c->category->name;
-            });
-
-
+            ->groupBy(fn($c) => App::getLocale() === 'ar'
+                ? $c->category->name_ar
+                : $c->category->name
+            );
 
         return array_merge(parent::getViewData(), [
             'criteria' => $criteria,

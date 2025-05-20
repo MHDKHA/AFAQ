@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssessmentResultsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,11 +21,18 @@ Route::get('/hrbp-guide', function () {
     return Inertia::render('Landing');
 });
 
+
+
+Route::get('/pdf', function () {
+    return view('product-survey-blade');
+});
+
 // Registration
 Route::middleware('web')->group(function () {
     Route::get('/register', [RegistrationController::class, 'index'])->name('registration.form');
     Route::post('/register', [RegistrationController::class, 'store'])->name('registration.store');
 });
+
 
 // Assessment
 Route::get('/assessment/{assessment}/print', [AssesmentController::class, 'print'])

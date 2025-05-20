@@ -6,8 +6,8 @@ use App\Filament\Resources\AssessmentResource;
 use App\Filament\Resources\AssessmentResource\Widgets\DomainSelectorWidget;
 use App\Models\Assessment;
 use App\Models\AssesmentItem;
+use App\Models\Category;
 use App\Models\Criterion;
-use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -39,7 +39,7 @@ class FillAssesment extends Page implements HasForms
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('back')
+            \Filament\Actions\Action::make('back')
                 ->label(__('assessment.fill.back_to_assessments'))
                 ->url(AssessmentResource::getUrl())
                 ->color('secondary'),
@@ -48,7 +48,12 @@ class FillAssesment extends Page implements HasForms
 
     public function loadAssessmentData(): void
     {
-        $query = Criterion::with('category')->orderBy('order');
+        $locale = App::getLocale();
+
+
+        $query = Criterion::with(['category', 'domain'])
+            ->orderBy('order');
+
         if ($this->selectedDomain) {
             $query->whereHas('category', fn($q) => $q->where('domain_id', $this->selectedDomain));
         }
@@ -99,7 +104,7 @@ class FillAssesment extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Forms\Components\Actions\Action::make('save')
+            \Filament\Forms\Components\Actions\Action::make('save')
                 ->label(__('assessment.fill.save'))
                 ->submit('save'),
         ];
@@ -115,24 +120,37 @@ class FillAssesment extends Page implements HasForms
 
     protected function getViewData(): array
     {
-        $locale = session('locale', 'ar');
-        App::setLocale($locale);
-        session(['locale' => $locale]);
-        $query = Criterion::with('category')->orderBy('order');
-        if ($this->selectedDomain) {
-            $query->whereHas('category', fn($q) => $q->where('domain_id', $this->selectedDomain));
-        }
-        $grouped = $query->get()->groupBy(function($c)use($locale) {
-            if($locale === 'ar') {
-                return  $c->category->name_ar;
-            }
-            return $c->category->name;
+        $locale = App::getLocale();
+
+        // 1. Grab all the domain IDs for this tool in one go
+        $domainIds = $this->record->tool->domains->pluck('id')->toArray();
+
+
+        // 2. Fetch every Criterion whose category belongs to any of those domains
+        $criteria = Criterion::with(['category', 'domain'])
+            ->whereHas('category', fn($q) => $q->whereIn('domain_id', $domainIds))
+            ->orderBy('order')
+            ->get();
+
+        // 3. Group by category name (localized)
+        $grouped = $criteria->groupBy(function ($c) use ($locale) {
+            return $locale === 'ar'
+                ? $c->category->name_ar
+                : $c->category->name;
         });
 
+        // 4. Merge into the parent view data
         return array_merge(parent::getViewData(), [
             'criteria' => $grouped,
         ]);
     }
+
+//    protected function getFooterWidgets(): array
+//    {
+//        return [
+//            DomainSelectorWidget::class,
+//        ];
+//    }
 
     public function getFooterWidgetsColumns(): int
     {
@@ -141,6 +159,9 @@ class FillAssesment extends Page implements HasForms
 
     protected function getWidgetsData(): array
     {
-        return ['selectedDomain' => $this->selectedDomain];
+        return [
+            'selectedDomain' => $this->selectedDomain,
+            'tool' => $this->record->tool,
+        ];
     }
 }
