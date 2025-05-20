@@ -1,30 +1,32 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+// Controllers
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\AssesmentController;
 use App\Http\Controllers\ReportController;
-use App\Models\User;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AssessmentDashboardController;
+use App\Http\Controllers\ToolController;
 
+// Home
 Route::get('/', function () {
-
     return view('welcome');
 });
 
-use Inertia\Inertia;
-
+// HRBP Guide (Inertia Page)
 Route::get('/hrbp-guide', function () {
     return Inertia::render('Landing');
 });
 
-use App\Http\Controllers\RegistrationController;
-
-
+// Registration
 Route::middleware('web')->group(function () {
     Route::get('/register', [RegistrationController::class, 'index'])->name('registration.form');
     Route::post('/register', [RegistrationController::class, 'store'])->name('registration.store');
-
 });
 
+// Assessment
 Route::get('/assessment/{assessment}/print', [AssesmentController::class, 'print'])
     ->name('assessment.print');
 
@@ -32,14 +34,17 @@ Route::get('/assessment-reports/{record}/export-pdf', [ReportController::class, 
     ->name('assessment-reports.export-pdf')
     ->middleware(['auth']);
 
-
-use App\Http\Controllers\AssessmentDashboardController;
-
 Route::get('/assessment-dashboard/{assessment}', [AssessmentDashboardController::class, 'show'])
     ->name('assessment-dashboard.show');
 
 Route::post('/assessment-dashboard/{assessment}/send-report', [AssessmentDashboardController::class, 'sendReport'])
     ->name('assessment-dashboard.send-report');
 
+Route::post('/assessments/{id}/save', [AssessmentDashboardController::class, 'save'])
+    ->name('assessments.save');
 
-Route::post('/assessments/{id}/save', [AssessmentDashboardController::class, 'save'])->name('assessments.save');
+// Tools
+Route::get('/tools', [ToolController::class, 'index'])->name('tools.index');
+Route::get('/tools/{slug}', [ToolController::class, 'show'])->name('tools.show');
+Route::post('/tools/{slug}/assessment', [ToolController::class, 'storeAssessment'])->name('tools.assessment.store');
+Route::get('/tools/{slug}/report/{assessment}', [ToolController::class, 'report'])->name('tools.report');

@@ -13,6 +13,7 @@ class Assessment extends Model
 
     protected $table = 'assessments';
 
+    // app/Models/Assessment.php - Add to your model
     protected $fillable = [
         'name',
         'name_ar',
@@ -20,10 +21,14 @@ class Assessment extends Model
         'description',
         'user_id',
         'company_id',
-        'registration_id', // New field to link to user registrations
-
-
+        'registration_id',
+        'tool_id', // Add this
     ];
+
+    public function tool(): BelongsTo
+    {
+        return $this->belongsTo(Tool::class);
+    }
     protected $casts = [
         'date' => 'date',
     ];

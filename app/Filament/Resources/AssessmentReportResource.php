@@ -23,7 +23,6 @@ class AssessmentReportResource extends Resource
     protected static ?string $model = AssessmentReport::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
-    protected static ?string $navigationGroup = 'Assessment';
 
     public static function getNavigationBadge(): ?string
     {

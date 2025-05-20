@@ -18,7 +18,10 @@ class AssessmentResource extends Resource
 {
     protected static ?string $model = Assessment::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-
+    public static function getNavigationGroup(): string
+    {
+        return __('assessment.navigation_label');
+    }
     protected static ?int $navigationSort = 4;
 
     public static function getNavigationLabel(): string
@@ -40,6 +43,13 @@ class AssessmentResource extends Resource
     {
         return $form
             ->schema([
+
+                Forms\Components\Select::make('tool_id')
+                    ->label(__('assessment.form.tool'))
+                    ->relationship('tool', 'name')
+                    ->preload()
+                    ->searchable()
+                    ->required(),
                 Forms\Components\TextInput::make('name')
                     ->label(__('assessment.form.name'))
                     ->required()

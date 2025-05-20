@@ -6,8 +6,10 @@ use App\Models\Assessment;
 use App\Models\AssesmentItem;
 use App\Models\Criterion;
 use App\Models\Domain;
+use App\Models\FreeAssessment;
 use App\Models\UserRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use App\Mail\AssessmentReportMail;
@@ -118,23 +120,56 @@ class AssessmentDashboardController extends Controller
 
     public function save(Request $request, $id)
     {
-        $registration = UserRegistration::findOrFail($id);
+        try {
+            $registration = UserRegistration::findOrFail($id);
 
-        // Validate the incoming request
-        $validated = $request->validate([
-            'responses' => 'required|array',
-        ]);
+            // Validate the incoming request
+            $validated = $request->validate([
+                'responses' => 'required|array',
+            ]);
 
-        // Update or create assessment
-        $assessment = Assessment::updateOrCreate(
-            ['registration_id' => $id],
-            ['responses' => $validated['responses']]
-        );
+            // Create or update assessment record
+            $assessment = Assessment::updateOrCreate(
+                ['registration_id' => $id],
+                [
+                    'name' => 'Web Assessment for ' . $registration->name,
+                    'name_ar' => 'تقييم الويب لـ ' . $registration->name,
+                    'date' => now(),
+                    'user_id' => 1, // Default user or use Auth::id() if authenticated
+                    'company_id' => 1, // Default company or create based on registration
+                ]
+            );
 
-        // Return success response
-        return response()->json([
-            'success' => true,
-            'message' => 'Assessment saved successfully',
-        ]);
+            // Save each assessment item
+            foreach ($validated['responses'] as $criterionId => $response) {
+                AssesmentItem::updateOrCreate(
+                    [
+                        'assessment_id' => $assessment->id,
+                        'criteria_id' => $criterionId
+                    ],
+                    [
+                        'is_available' => $response['is_available'] ?? false,
+                        'notes' => $response['notes'] ?? ''
+                    ]
+                );
+            }
+
+            // Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Assessment saved successfully',
+                'assessment_id' => $assessment->id
+            ]);
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Assessment save error: ' . $e->getMessage());
+
+            // Return error response with details
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving assessment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

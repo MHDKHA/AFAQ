@@ -19,8 +19,13 @@ class AssessmentDashboard extends Page
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static string $view = 'filament.pages.assessment-dashboard';
     protected static ?string $title = 'لوحة التحكم في التقييم';
+
+    public static function getNavigationGroup(): string
+    {
+        return __('assessment.navigation_label');
+    }
     protected static ?string $navigationLabel = 'لوحة التقييم';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
 
     public ?Assessment $assessment = null;
 

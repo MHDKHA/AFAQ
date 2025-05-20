@@ -15,8 +15,12 @@ use TomatoPHP\FilamentTranslationComponent\Components\Translation;
 class DomainResource extends Resource
 {
     protected static ?string $model = Domain::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-group';
+
     protected static ?string $recordTitleAttribute = 'name';
+    public static function getNavigationGroup(): string
+    {
+        return __('tool.navigation_label');
+    }
     protected static ?int $navigationSort = 1;
 
 
@@ -39,6 +43,11 @@ class DomainResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('tool_id')
+                    ->label(__('domain.form.tool'))
+                    ->relationship('tool', 'name')
+                    ->preload()
+                    ->searchable(),
                 Forms\Components\TextInput::make('name')
                     ->label(__('domain.name'))
                     ->required()
@@ -59,7 +68,11 @@ class DomainResource extends Resource
     {
         return $table
             ->columns([
+
                 ColumnGroup::make(__('domain.table.name'), [
+                    Tables\Columns\TextColumn::make('tool.name')
+                        ->label(__('domain.table.tool'))
+                        ->sortable(),
                     Tables\Columns\TextColumn::make('name')
                         ->label(__('domain.name'))
                         ->searchable(),

@@ -17,9 +17,13 @@ use Illuminate\Database\Eloquent\Builder;
 class CriterionResource extends Resource
 {
     protected static ?string $model = Criterion::class;
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 //    protected static ?string $recordTitleAttribute = 'question';
+    public static function getNavigationGroup(): string
+    {
+        return __('tool.navigation_label');
+    }
     protected static ?int $navigationSort = 3;
+
     public static function getNavigationLabel(): string
     {
         return __('criterion.navigation_label');

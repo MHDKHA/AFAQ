@@ -14,8 +14,12 @@ use Filament\Tables\Table;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+
     protected static ?string $recordTitleAttribute = 'name';
+    public static function getNavigationGroup(): string
+    {
+        return __('tool.navigation_label');
+    }
     protected static ?int $navigationSort = 2;
 
     public static function getNavigationLabel(): string

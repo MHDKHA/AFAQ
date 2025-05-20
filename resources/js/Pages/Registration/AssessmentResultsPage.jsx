@@ -1,463 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import {
-    PieChart, Pie, BarChart, Bar, LineChart, Line,
-    XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-    ResponsiveContainer, Cell
-} from 'recharts';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+import { useState } from 'react';
 
-const AssessmentReportDashboard = ({ registration, assessmentData, locale = 'en' }) => {
-    const [currentLocale, setCurrentLocale] = useState(locale);
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        completionRate: 0,
-        totalAnswers: 0,
-        yesAnswers: 0,
-        noAnswers: 0,
-        naAnswers: 0,
-        categoryScores: [],
-        progressOverTime: []
+const AssessmentReportDashboard = ({ assessment, statistics, domains, locale = 'ar' }) => {
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [emailForm, setEmailForm] = useState({
+        email: '',
+        subject: '',
+        message: ''
     });
 
-    // Toggle language
-    const toggleLanguage = () => {
-        setCurrentLocale(prevLocale => (prevLocale === 'en' ? 'ar' : 'en'));
+    const handleEmailChange = (e) => {
+        const { name, value } = e.target;
+        setEmailForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
-    // Calculate statistics from assessment data
-    useEffect(() => {
-        if (assessmentData) {
-            setLoading(true);
-
-            try {
-                // Process the assessment data to generate statistics
-                const responses = assessmentData;
-                const responseValues = Object.values(responses);
-
-                // Count response types
-                let yesCount = 0;
-                let noCount = 0;
-                let naCount = 0;
-
-                responseValues.forEach(response => {
-                    if (response.response === 'yes') yesCount++;
-                    else if (response.response === 'no') noCount++;
-                    else if (response.response === 'na') naCount++;
-                });
-
-                const totalResponses = yesCount + noCount + naCount;
-
-                // Calculate completion rate (assuming total questions is known or can be derived)
-                // For demonstration, we'll use totalResponses as the denominator
-                const completionRate = totalResponses > 0 ?
-                    Math.round((totalResponses / (totalResponses + 5)) * 100) : 0; // +5 is just for demo
-
-                // Example category scores (in a real app, you would calculate this from your data)
-                const categoryScores = [
-                    { name: 'Category 1', score: Math.round(Math.random() * 30 + 65) },
-                    { name: 'Category 2', score: Math.round(Math.random() * 30 + 65) },
-                    { name: 'Category 3', score: Math.round(Math.random() * 30 + 65) },
-                    { name: 'Category 4', score: Math.round(Math.random() * 30 + 65) },
-                    { name: 'Category 5', score: Math.round(Math.random() * 30 + 65) }
-                ];
-
-                // Example progress over time (in a real app, you would get this from your backend)
-                const progressOverTime = [
-                    { month: 'Jan', progress: Math.round(completionRate * 0.2) },
-                    { month: 'Feb', progress: Math.round(completionRate * 0.4) },
-                    { month: 'Mar', progress: Math.round(completionRate * 0.6) },
-                    { month: 'Apr', progress: Math.round(completionRate * 0.8) },
-                    { month: 'May', progress: completionRate }
-                ];
-
-                setStats({
-                    completionRate,
-                    totalAnswers: totalResponses,
-                    yesAnswers: yesCount,
-                    noAnswers: noCount,
-                    naAnswers: naCount,
-                    categoryScores,
-                    progressOverTime
-                });
-
-                setLoading(false);
-            } catch (error) {
-                console.error("Error processing assessment data:", error);
-                setLoading(false);
-            }
-        } else {
-            // If no data is available yet, use dummy data
-            setTimeout(() => {
-                const dummyStats = {
-                    completionRate: 75,
-                    totalAnswers: 30,
-                    yesAnswers: 22,
-                    noAnswers: 5,
-                    naAnswers: 3,
-                    categoryScores: [
-                        { name: 'Category 1', score: 85 },
-                        { name: 'Category 2', score: 72 },
-                        { name: 'Category 3', score: 68 },
-                        { name: 'Category 4', score: 91 },
-                        { name: 'Category 5', score: 77 }
-                    ],
-                    progressOverTime: [
-                        { month: 'Jan', progress: 15 },
-                        { month: 'Feb', progress: 30 },
-                        { month: 'Mar', progress: 45 },
-                        { month: 'Apr', progress: 60 },
-                        { month: 'May', progress: 75 }
-                    ]
-                };
-
-                setStats(dummyStats);
-                setLoading(false);
-            }, 1000);
+    const sendReport = async () => {
+        if (!emailForm.email) {
+            toast.error(locale === 'ar' ? 'يرجى إدخال عنوان البريد الإلكتروني' : 'Please enter an email address');
+            return;
         }
-    }, [assessmentData]);
 
-    // Translations
-    const translations = {
-        en: {
-            assessmentResults: "Assessment Results",
-            overview: "Overview",
-            statistics: "Statistics",
-            categoryPerformance: "Category Performance",
-            progressOverTime: "Progress Over Time",
-            completionRate: "Completion Rate",
-            responseSummary: "Response Summary",
-            yes: "Yes",
-            no: "No",
-            notApplicable: "Not Applicable",
-            backToAssessment: "Back to Assessment",
-            loading: "Loading results...",
-            noDataAvailable: "No data available",
-            score: "Score",
-            progress: "Progress",
-            month: "Month",
-            category: "Category"
-        },
-        ar: {
-            assessmentResults: "نتائج التقييم",
-            overview: "نظرة عامة",
-            statistics: "إحصائيات",
-            categoryPerformance: "أداء الفئة",
-            progressOverTime: "التقدم مع مرور الوقت",
-            completionRate: "معدل الإكمال",
-            responseSummary: "ملخص الاستجابة",
-            yes: "نعم",
-            no: "لا",
-            notApplicable: "لا ينطبق",
-            backToAssessment: "العودة للتقييم",
-            loading: "جاري تحميل النتائج...",
-            noDataAvailable: "لا توجد بيانات متاحة",
-            score: "النتيجة",
-            progress: "التقدم",
-            month: "الشهر",
-            category: "الفئة"
+        setSendingEmail(true);
+
+        try {
+            const response = await axios.post(`/assessment-dashboard/${assessment.id}/send-report`, {
+                ...emailForm,
+                locale
+            });
+
+            toast.success(locale === 'ar' ? 'تم إرسال التقرير بنجاح' : 'Report sent successfully');
+
+            // Reset form
+            setEmailForm({
+                email: '',
+                subject: '',
+                message: ''
+            });
+
+        } catch (error) {
+            console.error('Error sending report:', error);
+            toast.error(locale === 'ar' ? 'فشل إرسال التقرير' : 'Failed to send report');
+        } finally {
+            setSendingEmail(false);
         }
     };
 
-    const t = translations[currentLocale] || translations['en'];
-    const isRtl = currentLocale === 'ar';
-
-    const pieChartColors = ['#4CAF50', '#F44336', '#9E9E9E'];
-    const barChartColors = ['#2196F3', '#3F51B5', '#673AB7', '#009688', '#FF5722'];
-
-    // Prepare data for the response summary pie chart
-    const responseSummaryData = [
-        { name: t.yes, value: stats.yesAnswers },
-        { name: t.no, value: stats.noAnswers },
-        { name: t.notApplicable, value: stats.naAnswers }
-    ];
+    const printReport = () => {
+        window.open(`/assessment/${assessment.id}/print?locale=${locale}`, '_blank');
+    };
 
     return (
-        <>
-            <Head title={t.assessmentResults} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 className="text-2xl font-bold mb-6 text-center">
+                {locale === 'ar' ? 'لوحة التقييم' : 'Assessment Dashboard'}
+            </h1>
 
-            <div className="results-header">
-                <h1>{t.assessmentResults}</h1>
-                <p>{registration.name} - {registration.company_name}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Stats Cards - Responsive Design */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-bold text-center mb-2">
+                        {locale === 'ar' ? 'العناصر المتوفرة' : 'Available Items'}
+                    </h3>
+                    <p className="text-center text-2xl">{statistics.availableItems} / {statistics.totalItems}</p>
+                    <p className="text-center text-lg text-green-600">{statistics.availableRate}%</p>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-bold text-center mb-2">
+                        {locale === 'ar' ? 'العناصر غير المتوفرة' : 'Unavailable Items'}
+                    </h3>
+                    <p className="text-center text-2xl">{statistics.unavailableItems} / {statistics.totalItems}</p>
+                    <p className="text-center text-lg text-red-600">{statistics.unavailableRate}%</p>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-bold text-center mb-2">
+                        {locale === 'ar' ? 'اكتمال التقييم' : 'Assessment Completion'}
+                    </h3>
+                    <p className="text-center text-2xl">{statistics.totalItems} / 39</p>
+                    <p className="text-center text-lg text-blue-600">{statistics.completionRate}%</p>
+                </div>
             </div>
 
-            {loading ? (
-                <div className="loading-container">
-                    <div className="loading-spinner"></div>
-                    <p>{t.loading}</p>
+            {/* Actions Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-bold mb-4">
+                        {locale === 'ar' ? 'طباعة التقرير' : 'Print Report'}
+                    </h3>
+                    <button
+                        onClick={printReport}
+                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
+                    >
+                        {locale === 'ar' ? 'طباعة التقرير' : 'Print Report'}
+                    </button>
                 </div>
-            ) : (
-                <div className="results-container">
-                    <div className="results-section overview-section">
-                        <h2 className="section-title">{t.overview}</h2>
-                        <div className="stat-cards">
-                            <div className="stat-card">
-                                <h3>{t.completionRate}</h3>
-                                <p className="stat-value">{stats.completionRate}%</p>
-                            </div>
-                            <div className="stat-card">
-                                <h3>{t.responseSummary}</h3>
-                                <p className="stat-value">{stats.totalAnswers} <span className="stat-label">responses</span></p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="charts-row">
-                        <div className="chart-card">
-                            <h3 className="chart-title">{t.responseSummary}</h3>
-                            <div className="chart-container">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={responseSummaryData}
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={80}
-                                            dataKey="value"
-                                            labelLine={true}
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                        >
-                                            {responseSummaryData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={pieChartColors[index % pieChartColors.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-bold mb-4">
+                        {locale === 'ar' ? 'إرسال التقرير بالبريد الإلكتروني' : 'Email Report'}
+                    </h3>
+
+                    <div className="space-y-3">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                {locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={emailForm.email}
+                                onChange={handleEmailChange}
+                                className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder={locale === 'ar' ? 'أدخل البريد الإلكتروني' : 'Enter email address'}
+                            />
                         </div>
 
-                        <div className="chart-card">
-                            <h3 className="chart-title">{t.categoryPerformance}</h3>
-                            <div className="chart-container">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={stats.categoryScores}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" label={{ value: t.category, position: 'insideBottom', offset: -5 }} />
-                                        <YAxis label={{ value: t.score, angle: -90, position: 'insideLeft' }} />
-                                        <Tooltip />
-                                        <Bar dataKey="score" name={t.score}>
-                                            {stats.categoryScores.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={barChartColors[index % barChartColors.length]} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                {locale === 'ar' ? 'الموضوع (اختياري)' : 'Subject (Optional)'}
+                            </label>
+                            <input
+                                type="text"
+                                name="subject"
+                                value={emailForm.subject}
+                                onChange={handleEmailChange}
+                                className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder={locale === 'ar' ? 'موضوع البريد الإلكتروني' : 'Email subject'}
+                            />
                         </div>
-                    </div>
 
-                    <div className="full-width-chart">
-                        <h3 className="chart-title">{t.progressOverTime}</h3>
-                        <div className="chart-container">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={stats.progressOverTime}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" label={{ value: t.month, position: 'insideBottom', offset: -5 }} />
-                                    <YAxis label={{ value: t.progress, angle: -90, position: 'insideLeft' }} />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="progress" stroke="#8884d8" activeDot={{ r: 8 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                {locale === 'ar' ? 'الرسالة (اختياري)' : 'Message (Optional)'}
+                            </label>
+                            <textarea
+                                name="message"
+                                value={emailForm.message}
+                                onChange={handleEmailChange}
+                                rows="3"
+                                className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder={locale === 'ar' ? 'نص الرسالة' : 'Message body'}
+                            ></textarea>
                         </div>
+
+                        <button
+                            onClick={sendReport}
+                            disabled={sendingEmail}
+                            className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md shadow-sm"
+                        >
+                            {sendingEmail ?
+                                (locale === 'ar' ? 'جاري الإرسال...' : 'Sending...') :
+                                (locale === 'ar' ? 'إرسال التقرير' : 'Send Report')
+                            }
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
 
-            <style jsx>{`
-                /* Core variables (using the same variables from AssessmentPage) */
-                :root {
-                  --primary: #2b6cb0;
-                  --primary-light: #4299e1;
-                  --primary-dark: #2c5282;
-                  --accent: #f5f5dc;
-                  --accent-light: #fffff0;
-                  --dark: #1a1a2e;
-                  --light: #ffffff;
-                  --light-gray: #f8f9fc;
-                  --medium-gray: #e2e8f0;
-                  --text-gray: #6c757d;
-                  --success: #38b2ac;
-                  --shadow: 0 5px 15px rgba(0,0,0,0.08);
-                  --transition: all 0.3s ease;
-                }
+            {/* Assessment Results */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 sm:p-4 md:p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-4 text-center">
+                    {locale === 'ar' ? 'نتائج التقييم' : 'Assessment Results'}
+                </h2>
 
-                *, *::before, *::after {
-                  box-sizing: border-box;
-                  margin: 0;
-                  padding: 0;
-                }
+                <div className="overflow-x-auto">
+                    {domains.map(domain => (
+                        <div key={domain.id} className="mb-6">
+                            <h3 className="text-lg font-bold p-2 bg-gray-100 dark:bg-gray-700 rounded-lg mb-4">
+                                {locale === 'ar' ? domain.name_ar || domain.name : domain.name}
+                            </h3>
 
-                /* Results Header styles */
-                .results-header {
-                  margin-bottom: 2rem;
-                }
+                            {domain.categories.map(category => (
+                                <div key={category.id} className="mb-4">
+                                    <h4 className="text-md font-semibold p-2 bg-gray-50 dark:bg-gray-600 rounded-lg mb-2 border-r-4 border-blue-500">
+                                        {locale === 'ar' ? category.name_ar || category.name : category.name}
+                                    </h4>
 
-                .results-header h1 {
-                  font-size: 2rem;
-                  font-weight: 700;
-                  color: var(--primary);
-                  margin-bottom: 0.5rem;
-                }
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse min-w-full">
+                                            <thead>
+                                            <tr className="bg-gray-50 dark:bg-gray-700">
+                                                <th className="p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-right font-medium w-12">
+                                                    {locale === 'ar' ? 'م' : '#'}
+                                                </th>
+                                                <th className="p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-right font-medium">
+                                                    {locale === 'ar' ? 'السؤال التدقيقي' : 'Audit Question'}
+                                                </th>
+                                                <th className="p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-center font-medium w-24">
+                                                    {locale === 'ar' ? 'حالة التوفر' : 'Status'}
+                                                </th>
+                                                <th className="p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-right font-medium w-1/4">
+                                                    {locale === 'ar' ? 'ملاحظات' : 'Notes'}
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {category.criteria.map(criterion => {
+                                                const assessmentItem = assessment.items.find(item => item.criteria_id === criterion.id);
 
-                .results-header p {
-                  color: var(--text-gray);
-                  font-size: 1.1rem;
-                }
-
-                /* Loading state */
-                .loading-container {
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: center;
-                  height: 400px;
-                  background-color: var(--light);
-                  border-radius: 10px;
-                  box-shadow: var(--shadow);
-                }
-
-                .loading-spinner {
-                  width: 50px;
-                  height: 50px;
-                  border: 5px solid var(--light-gray);
-                  border-top: 5px solid var(--primary);
-                  border-radius: 50%;
-                  animation: spin 1s linear infinite;
-                  margin-bottom: 1rem;
-                }
-
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-
-                /* Results container */
-                .results-container {
-                  display: flex;
-                  flex-direction: column;
-                  gap: 1.5rem;
-                }
-
-                .results-section {
-                  background-color: var(--light);
-                  border-radius: 10px;
-                  box-shadow: var(--shadow);
-                  padding: 1.5rem;
-                }
-
-                .section-title {
-                  font-size: 1.5rem;
-                  font-weight: 600;
-                  color: var(--primary);
-                  margin-bottom: 1.25rem;
-                  padding-bottom: 0.75rem;
-                  border-bottom: 2px solid var(--light-gray);
-                }
-
-                /* Stat cards for overview */
-                .stat-cards {
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 1rem;
-                }
-
-                .stat-card {
-                  flex: 1;
-                  min-width: 200px;
-                  background-color: var(--light);
-                  border: 1px solid var(--medium-gray);
-                  border-radius: 8px;
-                  padding: 1.25rem;
-                  transition: var(--transition);
-                }
-
-                .stat-card:hover {
-                  box-shadow: var(--shadow);
-                }
-
-                .stat-card h3 {
-                  font-size: 1rem;
-                  color: var(--text-gray);
-                  margin-bottom: 0.5rem;
-                }
-
-                .stat-value {
-                  font-size: 2rem;
-                  font-weight: 700;
-                  color: var(--dark);
-                }
-
-                .stat-label {
-                  font-size: 1rem;
-                  color: var(--text-gray);
-                  font-weight: normal;
-                }
-
-                /* Charts layout */
-                .charts-row {
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 1.5rem;
-                  margin-bottom: 1.5rem;
-                }
-
-                .chart-card {
-                  flex: 1;
-                  min-width: 300px;
-                  background-color: var(--light);
-                  border-radius: 10px;
-                  box-shadow: var(--shadow);
-                  padding: 1.5rem;
-                }
-
-                .full-width-chart {
-                  width: 100%;
-                  background-color: var(--light);
-                  border-radius: 10px;
-                  box-shadow: var(--shadow);
-                  padding: 1.5rem;
-                }
-
-                .chart-title {
-                  font-size: 1.25rem;
-                  font-weight: 600;
-                  color: var(--primary);
-                  margin-bottom: 1.25rem;
-                }
-
-                .chart-container {
-                  width: 100%;
-                  height: 300px;
-                }
-
-                /* Responsive styles */
-                @media (max-width: 992px) {
-                  .charts-row {
-                    flex-direction: column;
-                  }
-
-                  .chart-card {
-                    width: 100%;
-                  }
-                }
-
-                @media (max-width: 576px) {
-                  .results-header h1 {
-                    font-size: 1.5rem;
-                  }
-
-                  .results-header p {
-                    font-size: 1rem;
-                  }
-
-                  .chart-container {
-                    height: 250px;
-                  }
-                }
-            `}</style>
-        </>
+                                                return (
+                                                    <tr key={criterion.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                        <td className="p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-center">
+                                                            {criterion.order}
+                                                        </td>
+                                                        <td className="p-2 md:p-3 border border-gray-200 dark:border-gray-600">
+                                                            {locale === 'ar' ? criterion.question_ar || criterion.question : criterion.question}
+                                                        </td>
+                                                        <td className={`p-2 md:p-3 border border-gray-200 dark:border-gray-600 text-center font-bold ${assessmentItem?.is_available ? 'text-green-600' : 'text-red-600'}`}>
+                                                            {assessmentItem?.is_available ?
+                                                                (locale === 'ar' ? 'نعم' : 'Yes') :
+                                                                (locale === 'ar' ? 'لا' : 'No')
+                                                            }
+                                                        </td>
+                                                        <td className="p-2 md:p-3 border border-gray-200 dark:border-gray-600">
+                                                            {assessmentItem?.notes || ''}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 };
 
