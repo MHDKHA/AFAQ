@@ -3,53 +3,84 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\User;
 use App\Models\UserRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class RegistrationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('Registration/Form');
+        // Get the tool slug from the query string if available
+        $toolSlug = $request->query('tool');
+
+        return Inertia::render('Registration/Form', [
+            'toolSlug' => $toolSlug,
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|min:8|confirmed',
             'phone' => 'required|string|max:20',
             'company_name' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
+            'tool_slug' => 'nullable|string|exists:tools,slug',
         ]);
 
         // Add device info
-        $validated['device_info'] = $request->header('User-Agent') ?? 'Unknown';
-        $validated['user_agent'] = $request->header('User-Agent') ?? 'Unknown';
-        $validated['ip_address'] = $this->getClientIp($request);
+        $registrationData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'company_name' => $validated['company_name'],
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'device_info' => $request->header('User-Agent') ?? 'Unknown',
+            'user_agent' => $request->header('User-Agent') ?? 'Unknown',
+            'ip_address' => $this->getClientIp($request),
+        ];
 
-        // Create registration
-        $registration = UserRegistration::create($validated);
+        // Create user registration
+        $registration = UserRegistration::create($registrationData);
 
-        // Get all criteria grouped by category
-        $criteria = Category::with(['criteria' => function ($query) {
-            $query->orderBy('order');
-        }])
-            ->get()
-            ->mapWithKeys(function($category) {
-                // Modify the data structure to make it more React-friendly
-                return [$category->name => $category->criteria->toArray()];
-            })
-            ->toArray();
-
-        // Redirect to the assessment page with the registration and criteria data
-        return Inertia::render('Registration/Assessment', [
-            'registration' => $registration,
-            'criteria' => $criteria,
+        // Create actual user account
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
+
+        // If tool slug provided, assign the corresponding role to the user
+        if (!empty($validated['tool_slug'])) {
+            $toolSlug = $validated['tool_slug'];
+
+            // Get or create role based on tool slug
+            $role = Role::firstOrCreate(['name' => $toolSlug]);
+
+            // Assign role to user
+            $user->assignRole($role);
+        }
+
+        // Log the user in
+        auth()->login($user);
+
+        // Redirect based on whether a tool was specified
+        if (!empty($validated['tool_slug'])) {
+            return redirect()->route('tools.show', $validated['tool_slug']);
+        }
+
+        // Default redirect to tools index
+        return redirect()->route('tools.index');
     }
 
     public function getClientIp(Request $request)

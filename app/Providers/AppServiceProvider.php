@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LoginResponse;
+use App\Http\Responses\RegisterResponse;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,5 +28,7 @@ class AppServiceProvider extends ServiceProvider
             $switch
                 ->locales(['ar','en']);
         });
+
+
     }
 }

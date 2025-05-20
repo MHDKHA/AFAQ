@@ -28,4 +28,17 @@ class Tool extends Model
     {
         return $this->hasMany(Domain::class);
     }
+
+    // In App\Models\Tool.php
+    public function getTotalCriteriaCount(): int
+    {
+        return $this->hasManyThrough(
+            \App\Models\Criterion::class,
+            \App\Models\Domain::class,
+            'tool_id', // Foreign key on domains table
+            'category_id', // Foreign key on criteria table
+            'id', // Local key on tools table
+            'id' // Local key on domains table
+        )->count();
+    }
 }

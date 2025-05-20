@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
@@ -14,10 +15,5 @@ export default defineConfig({
         alias: {
             '@': '/resources/js',
         },
-    },
-    build: {
-        rollupOptions: {
-            external: ['@inertiajs/inertia-react']
-        }
     }
 });

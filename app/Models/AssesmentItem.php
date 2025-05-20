@@ -1,5 +1,5 @@
 <?php
-
+// app/Models/AssesmentItem.php - ensure correct column name mapping
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +13,7 @@ class AssesmentItem extends Model
     protected $table = 'assessment_items';
 
     protected $fillable = [
-        'assesment_id',
+        'assessment_id', // Make sure this matches the column name in the database
         'criteria_id',
         'is_available',
         'notes',
@@ -23,9 +23,9 @@ class AssesmentItem extends Model
         'is_available' => 'boolean',
     ];
 
-    public function assesment(): BelongsTo
+    public function assessment(): BelongsTo
     {
-        return $this->belongsTo(Assessment::class, 'assesment_id');
+        return $this->belongsTo(Assessment::class, 'assessment_id');
     }
 
     public function criterion(): BelongsTo
@@ -33,4 +33,3 @@ class AssesmentItem extends Model
         return $this->belongsTo(Criterion::class, 'criteria_id');
     }
 }
-

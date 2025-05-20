@@ -29,7 +29,7 @@ class User extends Authenticatable implements FilamentUser
     ];
     public function assesments()
     {
-        return $this->hasMany(Assesment::class, 'user_id', 'id');
+        return $this->hasMany(Assessment::class, 'user_id', 'id');
     }
     /**
      * The attributes that should be hidden for serialization.
@@ -58,5 +58,16 @@ class User extends Authenticatable implements FilamentUser
     {
 
         return true;
+    }
+
+    public function hasToolAccess(Tool $tool): bool
+    {
+        // If the tool doesn't require a role, anyone can access it
+        if (empty($tool->role_name)) {
+            return true;
+        }
+
+        // Check if the user has the required role
+        return $this->hasRole($tool->role_name);
     }
 }

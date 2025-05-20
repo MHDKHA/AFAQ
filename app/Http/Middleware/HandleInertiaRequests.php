@@ -15,9 +15,7 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Determines the current asset version.
-     *
-     * @return string|null
+     * Determine the current asset version.
      */
     public function version(Request $request): ?string
     {
@@ -25,27 +23,24 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Defines the props that are shared by default.
-     *
-     * @return array
+     * Define the props that are shared by default.
      */
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                ] : null,
             ],
-            'flash' => function () use ($request) {
-                if ($request->session()->has('message')) {
-                    return [
-                        'message' => $request->session()->get('message'),
-                        'success' => $request->session()->get('success'),
-                        'error' => $request->session()->get('error'),
-                    ];
-                }
-
-                return [];
-            },
+            'flash' => [
+                'message' => fn () => $request->session()->get('message'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
+            'csrf_token' => csrf_token(),
         ]);
     }
 }

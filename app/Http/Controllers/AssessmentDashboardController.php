@@ -6,14 +6,13 @@ use App\Models\Assessment;
 use App\Models\AssesmentItem;
 use App\Models\Criterion;
 use App\Models\Domain;
-use App\Models\FreeAssessment;
-use App\Models\UserRegistration;
+use App\Models\Tool;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use App\Mail\AssessmentReportMail;
-use Illuminate\Support\Facades\App;
 
 class AssessmentDashboardController extends Controller
 {
@@ -26,11 +25,20 @@ class AssessmentDashboardController extends Controller
      */
     public function show(Assessment $assessment, Request $request)
     {
+        // Make sure the user can access this assessment
+        $user = Auth::user();
+        if ($assessment->user_id !== $user->id) {
+            abort(403, 'Unauthorized access to assessment');
+        }
+
+        // Get locale
         $locale = $request->get('locale', 'ar');
         App::setLocale($locale);
 
-        // Get domains with their categories and criteria
-        $domains = Domain::with(['categories.criteria'])->orderBy('order')->get();
+        // Get domains with their categories and criteria specifically for this tool
+        $tool = $assessment->tool;
+        $domains = $tool ? $tool->domains()->with(['categories.criteria'])->orderBy('order')->get() :
+            Domain::with(['categories.criteria'])->orderBy('order')->get();
 
         // Get all assessment items for this assessment
         $assessmentItems = AssesmentItem::where('assessment_id', $assessment->id)->get();
@@ -43,9 +51,14 @@ class AssessmentDashboardController extends Controller
         $availableRate = $totalItems > 0 ? round(($availableItems / $totalItems) * 100) : 0;
         $unavailableRate = $totalItems > 0 ? round(($unavailableItems / $totalItems) * 100) : 0;
 
-        // Total expected criteria count (39 as shown in the frontend code)
-        $completionRate = round(($totalItems / 39) * 100);
+        // Total expected criteria count
+        $totalExpectedItems = Criterion::whereHas('category.domain', function($query) use ($domains) {
+            $query->whereIn('domains.id', $domains->pluck('id'));
+        })->count();
 
+        $completionRate = $totalExpectedItems > 0 ? round(($totalItems / $totalExpectedItems) * 100) : 0;
+
+        // Gather statistics
         $statistics = [
             'totalItems' => $totalItems,
             'availableItems' => $availableItems,
@@ -53,14 +66,35 @@ class AssessmentDashboardController extends Controller
             'availableRate' => $availableRate,
             'unavailableRate' => $unavailableRate,
             'completionRate' => $completionRate,
+            'totalExpectedItems' => $totalExpectedItems,
         ];
+
+        // Calculate domain-specific statistics for charts
+        $domainStats = [];
+        foreach ($domains as $domain) {
+            $criteriaIds = $domain->criteria()->pluck('id')->toArray();
+
+            $domainItems = $assessmentItems->whereIn('criteria_id', $criteriaIds);
+            $domainAvailable = $domainItems->where('is_available', true)->count();
+            $domainUnavailable = $domainItems->where('is_available', false)->count();
+            $domainTotal = $domainItems->count();
+
+            $domainStats[$domain->name] = [
+                'available' => $domainAvailable,
+                'unavailable' => $domainUnavailable,
+                'total' => $domainTotal,
+                'availableRate' => $domainTotal > 0 ? round(($domainAvailable / $domainTotal) * 100) : 0,
+            ];
+        }
 
         // Return Inertia response with the data needed for the dashboard
         return Inertia::render('Assessments/Dashboard', [
-            'assessment' => $assessment,
+            'assessment' => $assessment->load('tool'),
             'domains' => $domains,
             'statistics' => $statistics,
+            'domainStats' => $domainStats,
             'locale' => $locale,
+            'canGenerateReport' => $user->can('generate_reports') && $completionRate >= 50, // Only allow report generation if the assessment is at least 50% complete
         ]);
     }
 
@@ -73,6 +107,15 @@ class AssessmentDashboardController extends Controller
      */
     public function sendReport(Assessment $assessment, Request $request)
     {
+        // Verify ownership
+        $user = Auth::user();
+        if ($assessment->user_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to assessment'
+            ], 403);
+        }
+
         $request->validate([
             'email' => 'required|email',
             'subject' => 'nullable|string|max:255',
@@ -83,7 +126,7 @@ class AssessmentDashboardController extends Controller
         App::setLocale($locale);
 
         try {
-            // Generate PDF or get its path
+            // Generate PDF path
             $pdfPath = route('assessment-reports.export-pdf', [
                 'record' => $assessment->id,
                 'locale' => $locale
@@ -91,7 +134,8 @@ class AssessmentDashboardController extends Controller
 
             // Default subject if none provided
             $subject = $request->input('subject') ?:
-                ($locale === 'ar' ? 'تقرير التقييم: ' . $assessment->name_ar : 'Assessment Report: ' . $assessment->name);
+                ($locale === 'ar' ? 'تقرير التقييم: ' . ($assessment->name_ar ?: $assessment->name) :
+                    'Assessment Report: ' . $assessment->name);
 
             // Send email with PDF attachment
             Mail::to($request->input('email'))
@@ -116,29 +160,30 @@ class AssessmentDashboardController extends Controller
         }
     }
 
-
-
+    /**
+     * Save assessment items.
+     *
+     * @param  Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function save(Request $request, $id)
     {
         try {
-            $registration = UserRegistration::findOrFail($id);
+            $assessment = Assessment::findOrFail($id);
+
+            // Check ownership if user is authenticated
+            if (Auth::check() && $assessment->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to edit this assessment'
+                ], 403);
+            }
 
             // Validate the incoming request
             $validated = $request->validate([
                 'responses' => 'required|array',
             ]);
-
-            // Create or update assessment record
-            $assessment = Assessment::updateOrCreate(
-                ['registration_id' => $id],
-                [
-                    'name' => 'Web Assessment for ' . $registration->name,
-                    'name_ar' => 'تقييم الويب لـ ' . $registration->name,
-                    'date' => now(),
-                    'user_id' => 1, // Default user or use Auth::id() if authenticated
-                    'company_id' => 1, // Default company or create based on registration
-                ]
-            );
 
             // Save each assessment item
             foreach ($validated['responses'] as $criterionId => $response) {
@@ -161,9 +206,6 @@ class AssessmentDashboardController extends Controller
                 'assessment_id' => $assessment->id
             ]);
         } catch (\Exception $e) {
-            // Log the error
-            Log::error('Assessment save error: ' . $e->getMessage());
-
             // Return error response with details
             return response()->json([
                 'success' => false,

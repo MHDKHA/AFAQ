@@ -1,5 +1,5 @@
 <?php
-
+// app/Models/Assessment.php - updated model with corrected relationships
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +13,6 @@ class Assessment extends Model
 
     protected $table = 'assessments';
 
-    // app/Models/Assessment.php - Add to your model
     protected $fillable = [
         'name',
         'name_ar',
@@ -21,19 +20,13 @@ class Assessment extends Model
         'description',
         'user_id',
         'company_id',
+        'tool_id',
         'registration_id',
-        'tool_id', // Add this
     ];
 
-    public function tool(): BelongsTo
-    {
-        return $this->belongsTo(Tool::class);
-    }
     protected $casts = [
         'date' => 'date',
     ];
-
-
 
     public function user(): BelongsTo
     {
@@ -45,27 +38,30 @@ class Assessment extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function tool(): BelongsTo
+    {
+        return $this->belongsTo(Tool::class);
+    }
+
     public function items(): HasMany
     {
-        return $this->hasMany(AssesmentItem::class, 'assesment_id', 'id');
+        return $this->hasMany(AssesmentItem::class, 'assessment_id', 'id');
     }
+
     public function registration(): BelongsTo
     {
         return $this->belongsTo(UserRegistration::class, 'registration_id');
     }
+
     public function report()
     {
-        return $this->hasOne(AssessmentReport::class, 'assesment_id', 'id');
+        return $this->hasOne(AssessmentReport::class, 'assessment_id', 'id');
     }
-
-
 
     public function getCompletionPercentageAttribute(): float|int
     {
         $totalCriteria = Criterion::count();
-
-
-        $answeredCriteria = $this?->items()?->count() ;
+        $answeredCriteria = $this->items()->count();
 
         if ($totalCriteria === 0) {
             return 0;
