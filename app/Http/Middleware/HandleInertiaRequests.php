@@ -1,4 +1,5 @@
 <?php
+// app/Http/Middleware/HandleInertiaRequests.php
 
 namespace App\Http\Middleware;
 
@@ -41,6 +42,10 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'csrf_token' => csrf_token(),
+            // Pass tools to all pages
+            'tools' => \App\Models\Tool::where('is_active', true)->get(),
+            // Pass locale to all pages
+            'locale' => app()->getLocale(),
         ]);
     }
 }

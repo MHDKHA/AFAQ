@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Tool;
 use App\Models\User;
 use App\Models\UserRegistration;
 use Illuminate\Http\Request;
@@ -17,8 +18,13 @@ class RegistrationController extends Controller
         // Get the tool slug from the query string if available
         $toolSlug = $request->query('tool');
 
+        // Get all active tools to pass to MainLayout
+        $tools = Tool::where('is_active', true)->get();
+
         return Inertia::render('Registration/Form', [
             'toolSlug' => $toolSlug,
+            'tools' => $tools,
+            'locale' => app()->getLocale()
         ]);
     }
 

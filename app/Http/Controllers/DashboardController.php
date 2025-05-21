@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assessment;
+use App\Models\Tool;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,7 +14,7 @@ class DashboardController extends Controller
         $user = $request->user();
 
         // Get user's assessments with tool and items
-        $assessments = $user->assessments()
+        $assessments = $user->assesments()
             ->with(['tool', 'items'])
             ->latest()
             ->get();
@@ -23,7 +25,7 @@ class DashboardController extends Controller
             $assessment->total_count = $assessment->items->count();
 
             // Get total criteria count for this tool
-            $totalCriteria = $assessment->tool->getTotalCriteriaCount();
+            $totalCriteria = $assessment->tool ? $assessment->tool->getTotalCriteriaCount() : 0;
 
             $assessment->completion_percentage = $totalCriteria > 0
                 ? round(($assessment->total_count / $totalCriteria) * 100)
@@ -39,7 +41,8 @@ class DashboardController extends Controller
             'assessments' => $assessments,
             'showSubscriptionPrompt' => $showSubscriptionPrompt,
             'hasSubscription' => $user->hasRole('premium'),
-            'locale' => app()->getLocale()
+            'locale' => app()->getLocale(),
+            'tools' => Tool::where('is_active', true)->get()
         ]);
     }
 }

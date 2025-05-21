@@ -1,11 +1,13 @@
 // resources/js/Layouts/MainLayout.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Toaster } from 'react-hot-toast';
 
 export default function MainLayout({ children, title }) {
-    const { auth, flash } = usePage().props;
-    const { locale, tools } = usePage().props;
+    // Get page props with default fallbacks for auth and tools
+    const { auth = {}, flash } = usePage().props;
+    const { locale = 'en' } = usePage().props;
+    const tools = usePage().props.tools || [];
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -84,6 +86,9 @@ export default function MainLayout({ children, title }) {
             {/* Page Content */}
             <main className="py-10">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    {title && (
+                        <h1 className="text-2xl font-bold mb-6">{title}</h1>
+                    )}
                     {children}
                 </div>
             </main>
